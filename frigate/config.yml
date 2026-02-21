@@ -27,14 +27,18 @@ cameras:
 record:
   enabled: true
   retain:
-    days: 60          # Keep continuous recordings for 60 days
-    mode: all         # Record all footage (not just events)
+    days: 30          # Continuous recording retained for 30 days
+    mode: all         # Record all footage regardless of events
   alerts:
+    pre_capture: 10   # Include 10s before alert event
+    post_capture: 30  # Include 30s after alert event
     retain:
-      days: 60
+      days: 30
   detections:
+    pre_capture: 5    # Include 5s before detection event
+    post_capture: 15  # Include 15s after detection event
     retain:
-      days: 60
+      days: 30
 
 detectors:
   # Intel OpenVINO — uses N5105 integrated GPU (iGPU) for inference
