@@ -1,0 +1,18 @@
+api:
+  listen: ":1985"   # Web API 端口（Frigate 内置 go2rtc 使用 1984，错开）
+
+rtsp:
+  listen: ":8556"   # RTSP 端口（Frigate 内置 go2rtc 使用 8554，错开）
+
+streams:
+  # 客厅小米摄像头（DID: 1195161682）
+  # micam 容器推流到此，Frigate 从此拉流
+  xiaomi_living_room:
+
+  # 儿童房小米摄像头（DID: 1175497596）
+  # micam_kid_room 容器推流到此，Frigate 从此拉流
+  xiaomi_kid_room:
+
+# 注：miloco 当前只支持 STREAM_CHANNEL: 0（主流）
+# STREAM_CHANNEL: 1（子流）无法建立连接，原因未知
+# 因此两路小米流均为单流，同时承担录像和检测

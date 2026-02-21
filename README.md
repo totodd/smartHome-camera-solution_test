@@ -1,174 +1,119 @@
-# Smart Home Camera Solution
+# 智能家居摄像头方案
 
-本项目记录了一套完整的家用摄像头方案，从摄像头接入、本地录像存储，到 Home Assistant 仪表盘展示的全流程搭建过程。适合从零开始搭建。
+基于 UGREEN NAS 的本地化家用摄像头监控系统，实现三路摄像头统一录像、AI 检测、Home Assistant 联动。
 
 ---
 
 ## 硬件清单
 
-| 设备 | 型号 | 用途 |
+| 设备 | 型号 | 位置 | 接入方式 |
+|------|------|------|---------|
+| NAS | UGREEN DX4600（Intel N5105） | - | 运行所有 Docker 服务 |
+| 摄像头 1 | 海康威视 DS-IPC-T12HV3-LA | 儿童房 | 原生 RTSP 直连 Frigate |
+| 摄像头 2 | 小米智能摄像机 4 4K | 客厅 | miloco → micam → go2rtc → Frigate |
+| 摄像头 3 | 小米智能摄像机 4 4K | 儿童房 | miloco → micam → go2rtc → Frigate |
+
+---
+
+## 系统架构
+
+```
+局域网
+│
+├── 海康威视（儿童房）
+│   ├── 主流 RTSP :554/Channels/101 ────────────────┐
+│   └── 子流 RTSP :554/Channels/102 ────────────────┤
+│                                                    ▼
+├── 小米摄像头（客厅）                           Frigate NVR
+│   └── 小米私有协议                             (Docker, NAS)
+│        └── miloco ──→ micam                        │
+│                   ──→ go2rtc :8556 ────────────────┤
+│                        xiaomi_living_room           │  OpenVINO GPU
+│                                                    │  AI 检测
+└── 小米摄像头（儿童房）                             │
+    └── 小米私有协议                                  │  NAS 录像存储
+         └── miloco ──→ micam_kid_room               │
+                    ──→ go2rtc :8556 ────────────────┘
+                         xiaomi_kid_room
+                              │
+                              ▼
+                         MQTT (Mosquitto)
+                              │
+                              ▼
+                       Home Assistant :8123
+                              │
+                              ▼
+                       Lovelace Dashboard
+```
+
+完整说明见 [docs/architecture.md](docs/architecture.md)
+
+---
+
+## 录像规则（三台摄像头统一）
+
+| 类型 | 说明 | 保留时长 |
+|------|------|---------|
+| 连续录像 | 24 小时不间断 | 30 天 |
+| 警报片段 | 事件前 10s + 事件后 30s | 30 天 |
+| 检测片段 | 事件前 5s + 事件后 15s | 30 天 |
+
+**AI 检测目标**：人、猫、狗
+**检测引擎**：OpenVINO，使用 N5105 iGPU（`device: GPU`）
+
+---
+
+## Docker 服务清单
+
+| 容器 | 用途 | 端口 |
 |------|------|------|
-| IP 摄像头 | 海康威视 DS-IPC-T12HV3-LA | 儿童房监控，RTSP 推流 |
-| 智能摄像头 | 小米智能摄像机 4 4K 2 | 小米生态，通过 xiaomi_home 接入 HA |
-| NAS | UGREEN NAS | 运行 Docker（HA + Frigate），存储录像 |
+| `frigate` | NVR 主服务 | 5000（Web UI）、8554（RTSP） |
+| `homeassistant` | 智能家居中枢 | 8123 |
+| `mosquitto` | MQTT（需 network_mode: host） | 1883 |
+| `miloco` | 小米协议中间件（需 network_mode: host） | 8001 |
+| `go2rtc_xiaomi` | 小米 RTSP 服务器 | 8556、1985 |
+| `micam` | 客厅小米主流推送 | - |
+| `micam_kid_room` | 儿童房小米主流推送 | - |
 
 ---
 
-## 软件架构
+## 部署步骤
 
-```
-海康威视摄像头 (RTSP)
-       │
-       ▼
-  Frigate NVR  ──────────► NAS 录像存储 (/recordings)
-  (Docker on NAS)
-       │
-       │ snapshot API
-       ▼
-  Home Assistant
-  (Docker on NAS)
-       │
-       ▼
-  Lovelace 仪表盘（单页房间布局）
-```
+### 1. 海康威视摄像头
 
-完整架构图见 [docs/architecture.md](docs/architecture.md)
+直接在 `frigate/config.yml` 填写 RTSP 地址，无需额外配置。
 
----
-
-## 搭建步骤
-
-### 1. 准备 NAS 目录
-
-在 NAS 上创建以下目录结构（路径可自定义，需与 docker-compose.yml 一致）：
-
-```
-/volume1/homeRecording_KID_FIX/
-├── frigate-config/     ← 存放 config.yml
-└── recordings/         ← Frigate 写入录像（自动创建）
-```
-
-### 2. 部署 Frigate NVR
-
-**2.1 填写配置文件**
-
-复制 `frigate/config.yml` 到 NAS 的 `frigate-config/` 目录，替换以下占位符：
-
-```yaml
-# 替换为实际摄像头信息
-- path: rtsp://<USERNAME>:<PASSWORD>@<CAMERA_IP>:554/Streaming/Channels/101
-```
-
-**2.2 启动容器**
-
-将 `frigate/docker-compose.yml` 上传到 NAS，通过 Docker Manager 或 SSH 执行：
+### 2. 小米摄像头桥接
 
 ```bash
-docker compose up -d
+cd /volume2/homeRecording_KID_FIX/micam
+sudo docker compose up -d
 ```
 
-> **UGREEN NAS 提示**：可在 NAS 的 Docker Manager 图形界面中直接导入 docker-compose.yml。
+需先通过 miloco 完成小米账号认证（参见 [micam 项目](https://github.com/miiot/micam)）。
 
-**2.3 验证 Frigate 运行**
-
-浏览器访问 `http://<NAS_IP>:5000`，应看到 Frigate Web UI 和摄像头画面。
-
-**Frigate 关键 API**：
-
-| API | 说明 |
-|-----|------|
-| `GET /api/<camera>/latest.jpg` | 最新快照 |
-| `GET /api/events` | 检测事件列表 |
-| `GET /api/stats` | 运行状态 |
-
----
-
-### 3. 部署 Home Assistant
-
-> 如果 HA 已在运行，跳过此步。
-
-推荐使用 Docker 部署（与 Frigate 同一台 NAS）：
+### 3. Frigate NVR
 
 ```bash
-docker run -d \
-  --name homeassistant \
-  --restart unless-stopped \
-  -v /volume1/ha-config:/config \
-  -v /etc/localtime:/etc/localtime:ro \
-  -p 8123:8123 \
-  ghcr.io/home-assistant/home-assistant:stable
+sudo docker restart frigate
+# 验证：浏览器访问 http://<NAS_IP>:5000
 ```
 
----
+### 4. Home Assistant 集成
 
-### 4. 在 HA 中添加 Frigate 摄像头实体
-
-HA 通过 Frigate 的 snapshot API 显示摄像头画面，无需安装额外插件。
-
-**4.1 在 `configuration.yaml` 中添加：**
-
-```yaml
-camera:
-  - platform: generic
-    name: "儿童房 Frigate"
-    still_image_url: "http://<NAS_IP>:5000/api/kid_room/latest.jpg"
-    # stream_source 可选，需 NAS 开放 8554 端口
-    # stream_source: "rtsp://<NAS_IP>:8554/kid_room"
-```
-
-**4.2 重启 HA**，新实体 `camera.ertong_fang_frigate`（或自动生成的 ID）将出现在设备列表中。
-
----
-
-### 5. 接入小米摄像头（可选）
-
-1. HA 中安装 **xiaomi_home** 集成（Settings → Integrations → 搜索 Xiaomi Home）
-2. 使用米家账号登录授权
-3. 小米摄像机的实体会自动出现，包括：
-   - `switch.xxx_motion_detection_xxx`：移动侦测开关（即"看家助手"）
-   - `camera.xxx`：视频流
-
----
-
-### 6. 配置 Lovelace 仪表盘
-
-**6.1 创建新仪表盘**
-
-HA → Settings → Dashboards → Add Dashboard
-
-- Title: `智能家居`
-- URL Path: `home`
-- Icon: `mdi:home`
-
-**6.2 应用配置**
-
-进入仪表盘 → 右上角菜单 → Edit → 三点菜单 → Raw Configuration Editor
-
-将 `homeassistant/lovelace-dashboard.yaml` 的内容粘贴进去，根据实际实体 ID 修改后保存。
-
----
-
-## 功能对照表
-
-| 功能 | 提供方 | 说明 |
-|------|--------|------|
-| 本地录像（存 NAS） | **Frigate** | 60天循环覆盖 |
-| AI 目标检测（人/猫/狗） | **Frigate** | 本地离线运行，无需云端 |
-| 快照 API | **Frigate** | `GET /api/<cam>/latest.jpg` |
-| RTSP 双码流 | **海康威视自带** | 主流 101（录像）/ 子流 102（检测） |
-| H.265 编码 | **海康威视自带** | 节省存储空间 |
-| 摄像头本地 SD 卡录像 | **海康威视自带** | 独立于 Frigate，摄像头内置 |
-| 移动侦测（看家助手） | **小米摄像头 + xiaomi_home** | HA 中通过 switch 实体控制 |
-| Lovelace 仪表盘 | **Home Assistant** | 单页按房间分组 |
+- 安装 **Frigate** 集成（HACS）→ 填写 Frigate URL
+- 安装 **Xiaomi Home** 集成 → 米家账号登录 → 启用摄像头设备
+- 导入 `homeassistant/lovelace-dashboard.yaml` 到 Dashboard
 
 ---
 
 ## 注意事项
 
-- **凭证安全**：`config.yml` 中的摄像头用户名密码请勿提交到公开仓库。可使用环境变量或 HA Secrets 管理。
-- **CPU 检测性能**：Frigate 默认使用 CPU 检测（`type: cpu`），延迟较高。有条件可接入 Google Coral USB Accelerator 或使用 OpenVINO。
-- **存储空间**：60 天 `mode: all` 连续录像会占用大量空间，请根据实际磁盘容量调整 `days` 和 `mode`。
-- **防火墙**：确保 NAS 的 5000、8554、8555 端口在局域网内可访问。
+- **OpenVINO**：必须 `device: GPU`，不能用 `device: AUTO`（N5105 缺少 AVX-512）
+- **Mosquitto**：必须 `network_mode: host`，否则 Docker 网络隔离导致连接失败
+- **HA 启动顺序**：HA 重启后等 MQTT 集成加载完再重启 Frigate，否则 `KeyError: mqtt`
+- **小米子流**：miloco 当前只支持 channel 0，单路流同时用于录像和检测
+- **凭证安全**：密码不提交仓库，使用本地 `.secrets` 文件管理
 
 ---
 
@@ -178,10 +123,12 @@ HA → Settings → Dashboards → Add Dashboard
 .
 ├── README.md
 ├── docs/
-│   └── architecture.md          # 完整系统架构图
+│   └── architecture.md          # 详细架构说明
 ├── frigate/
-│   ├── docker-compose.yml       # Frigate 容器部署配置
-│   └── config.yml               # Frigate 摄像头与录像配置
+│   └── config.yml               # Frigate 配置（脱敏）
+├── micam/
+│   ├── docker-compose.yml       # 小米摄像头桥接服务
+│   └── go2rtc.yaml              # go2rtc 流配置
 └── homeassistant/
-    └── lovelace-dashboard.yaml  # HA 仪表盘配置模板
+    └── lovelace-dashboard.yaml  # HA Dashboard 配置
 ```

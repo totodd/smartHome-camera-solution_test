@@ -1,49 +1,72 @@
 mqtt:
-  enabled: false   # Enable if you use MQTT broker (e.g., Mosquitto)
-
-ffmpeg:
-  # Hardware-accelerated video decoding via Intel N5105 iGPU (VAAPI)
-  # Offloads H.264/H.265 decoding from CPU to GPU — significant CPU reduction
-  hwaccel_args: preset-vaapi
+  enabled: true
+  host: 192.168.2.61
+  port: 1883
 
 cameras:
+  # 海康威视（儿童房）：双码流分离，主流录像 + 子流检测
   kid_room:
     ffmpeg:
       inputs:
-        # High-res stream for recording (Channel 101 = main stream)
-        - path: rtsp://<USERNAME>:<PASSWORD>@<CAMERA_IP>:554/Streaming/Channels/101
+        - path: rtsp://<HIKVISION_USER>:<HIKVISION_PASSWORD>@192.168.2.28:554/Streaming/Channels/101
           roles:
             - record
-        # Low-res stream for detection (Channel 102 = sub stream, saves CPU)
-        - path: rtsp://<USERNAME>:<PASSWORD>@<CAMERA_IP>:554/Streaming/Channels/102
+        - path: rtsp://<HIKVISION_USER>:<HIKVISION_PASSWORD>@192.168.2.28:554/Streaming/Channels/102
           roles:
             - detect
     detect:
       enabled: true
-      width: 640   # Reduced from 1280 — sufficient for detection, less CPU
-      height: 360  # Reduced from 720
+      width: 1280
+      height: 720
+      fps: 5
+
+  # 小米摄像头（客厅）：单流共用录像+检测（miloco 不支持子流）
+  living_room:
+    ffmpeg:
+      inputs:
+        - path: rtsp://192.168.2.61:8556/xiaomi_living_room
+          roles:
+            - record
+            - detect
+    detect:
+      enabled: true
+      width: 1280
+      height: 720
+      fps: 5
+
+  # 小米摄像头（儿童房）：单流共用录像+检测
+  kid_room_xiaomi:
+    ffmpeg:
+      inputs:
+        - path: rtsp://192.168.2.61:8556/xiaomi_kid_room
+          roles:
+            - record
+            - detect
+    detect:
+      enabled: true
+      width: 1280
+      height: 720
       fps: 5
 
 record:
   enabled: true
   retain:
-    days: 30          # Continuous recording retained for 30 days
-    mode: all         # Record all footage regardless of events
+    days: 30          # 连续录像保留30天（全时段）
+    mode: all
   alerts:
-    pre_capture: 10   # Include 10s before alert event
-    post_capture: 30  # Include 30s after alert event
+    pre_capture: 10   # 警报事件前10秒
+    post_capture: 30  # 警报事件后30秒
     retain:
       days: 30
   detections:
-    pre_capture: 5    # Include 5s before detection event
-    post_capture: 15  # Include 15s after detection event
+    pre_capture: 5    # 检测事件前5秒
+    post_capture: 15  # 检测事件后15秒
     retain:
       days: 30
 
 detectors:
-  # Intel OpenVINO — uses N5105 integrated GPU (iGPU) for inference
-  # Tested result: inference 13ms (vs 59ms CPU), detector CPU 0.6% (vs 85%)
-  # NOTE: device must be GPU, not AUTO — AUTO triggers AVX-512 which N5105 lacks
+  # OpenVINO：使用 Intel N5105 iGPU 推理
+  # 必须指定 device: GPU，不能用 AUTO（N5105 不支持 AVX-512）
   ov:
     type: openvino
     device: GPU
@@ -62,5 +85,4 @@ objects:
     - cat
     - dog
 
-# Frigate version this config was tested on
 version: 0.16-0

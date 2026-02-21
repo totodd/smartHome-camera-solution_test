@@ -1,0 +1,224 @@
+{
+  "title": "我的家",
+  "views": [
+    {
+      "title": "我的家",
+      "path": "home",
+      "icon": "mdi:home",
+      "type": "masonry",
+      "cards": [
+        {
+          "type": "vertical-stack",
+          "cards": [
+            {
+              "type": "picture-glance",
+              "title": "👶 儿童房",
+              "camera_image": "camera.192_168_2_61",
+              "entities": [
+                {
+                  "entity": "light.kai_guan_kai_guan_kai_guan",
+                  "name": "吊灯"
+                },
+                {
+                  "entity": "switch.chuangmi_cn_1195161682_079ac1_on_p_2_1",
+                  "name": "摄像机"
+                },
+                {
+                  "entity": "switch.chuangmi_cn_1195161682_079ac1_motion_detection_p_5_1",
+                  "name": "移动侦测"
+                }
+              ]
+            },
+            {
+              "type": "picture-glance",
+              "title": "👶 儿童房 (小米)",
+              "camera_image": "camera.kid_room_xiaomi",
+              "entities": [
+                {
+                  "entity": "sensor.chuangmi_cn_1175497596_079ac1_people_number_p_8_30",
+                  "name": "人数"
+                },
+                {
+                  "entity": "switch.chuangmi_cn_1175497596_079ac1_human_detection_p_8_8",
+                  "name": "AI检测"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "entities",
+          "title": "🚪 玄关",
+          "entities": [
+            {
+              "entity": "binary_sensor.isa_cn_blt_3_1l8k33f1gc400_dw2hl_contact_state_p_2_2",
+              "name": "大门"
+            },
+            {
+              "entity": "switch.giot_cn_2043784931_v83ksm_on_p_2_1",
+              "name": "门禁"
+            }
+          ]
+        },
+        {
+          "type": "entities",
+          "title": "🛋️ 客厅",
+          "entities": [
+            {
+              "entity": "light.ke_ting_deng_zu_men_lang_an_jian_1",
+              "name": "门廊"
+            },
+            {
+              "entity": "light.yeelight_zhi_neng_kai_guan_si_jian_zhong_yang_she_deng_an_jian_2",
+              "name": "中央射灯"
+            },
+            {
+              "entity": "light.ke_ting_deng_zu_shu_ju_an_jian_3",
+              "name": "书柜"
+            },
+            {
+              "entity": "light.ke_ting_deng_zu_bian_deng_an_jian_4",
+              "name": "边灯"
+            },
+            {
+              "entity": "sensor.miaomiaoc_cn_blt_3_1njohqk8t0g00_t2_temperature_p_2_1",
+              "name": "温度"
+            },
+            {
+              "entity": "sensor.miaomiaoc_cn_blt_3_1njohqk8t0g00_t2_relative_humidity_p_2_2",
+              "name": "湿度"
+            }
+          ]
+        },
+        {
+          "type": "entities",
+          "title": "🍳 厨房",
+          "entities": [
+            {
+              "entity": "light.she_deng_she_deng_an_jian_1",
+              "name": "射灯"
+            },
+            {
+              "entity": "light.she_deng_shui_cao_an_jian_2",
+              "name": "水槽"
+            },
+            {
+              "entity": "light.chu_fang_kong_zhi_deng_dai_an_jian_3",
+              "name": "灯带"
+            },
+            {
+              "entity": "light.chu_fang_kong_zhi_deng_an_jian_4",
+              "name": "玄关灯"
+            },
+            {
+              "entity": "switch.cuco_cn_2027675117_v3_on_p_2_1",
+              "name": "空气净化器"
+            }
+          ]
+        },
+        {
+          "type": "entities",
+          "title": "🛏️ 卧室",
+          "entities": [
+            {
+              "entity": "light.wo_shi_deng_zu_zhu_deng_zuo_jian",
+              "name": "主灯"
+            },
+            {
+              "entity": "light.wo_shi_deng_zu_yi_mao_jian_zhong_jian",
+              "name": "衣帽间"
+            },
+            {
+              "entity": "light.wo_shi_deng_zu_chu_cang_jian_you_jian",
+              "name": "储藏间"
+            },
+            {
+              "entity": "light.zuo_bian_chuang_tou_deng_kai_guan_kai_guan",
+              "name": "左床头灯"
+            },
+            {
+              "entity": "light.chuang_tou_deng_you_kai_guan_kai_guan",
+              "name": "右床头灯"
+            },
+            {
+              "entity": "light.chuang_tai_kai_guan_kai_guan_2",
+              "name": "窗台"
+            },
+            {
+              "entity": "scene.good_night",
+              "name": "睡眠模式"
+            }
+          ]
+        },
+        {
+          "type": "entities",
+          "title": "🚿 主卫",
+          "entities": [
+            {
+              "entity": "light.xiao_mi_zhi_neng_kai_guan_san_kai_ling_huo_ban_you_jian_xiao_mi_zhi_neng_kai_guan_san_kai_ling_huo_ban_you_jian",
+              "name": "主卫灯"
+            },
+            {
+              "entity": "light.xiao_mi_zhi_neng_kai_guan_san_kai_ling_huo_ban_zhong_jian_xiao_mi_zhi_neng_kai_guan_san_kai_ling_huo_ban_zhong_jian",
+              "name": "镜柜灯"
+            },
+            {
+              "entity": "light.xiao_mi_zhi_neng_kai_guan_san_kai_ling_huo_ban_zuo_jian_xiao_mi_zhi_neng_kai_guan_san_kai_ling_huo_ban_zuo_jian",
+              "name": "镜柜顶灯"
+            }
+          ]
+        },
+        {
+          "type": "entities",
+          "title": "🪥 次卫",
+          "entities": [
+            {
+              "entity": "light.ci_wei_deng_zu_ce_suo_deng_zuo_jian",
+              "name": "次卫灯"
+            },
+            {
+              "entity": "fan.ci_wei_deng_zu_ce_suo_feng_shan_zhong_jian",
+              "name": "次卫风扇"
+            },
+            {
+              "entity": "fan.ci_wei_deng_zu_chu_cang_jian_feng_shan_you_jian",
+              "name": "储藏间风扇"
+            }
+          ]
+        },
+        {
+          "type": "entities",
+          "title": "📚 书房",
+          "entities": [
+            {
+              "entity": "light.diao_deng_kai_guan_kai_guan",
+              "name": "吊灯"
+            },
+            {
+              "entity": "switch.chuangmi_cn_497211978_212a01_on_p_2_1",
+              "name": "音响"
+            },
+            {
+              "entity": "cover.babai_cn_1121751075_ble11s_s_2_curtain",
+              "name": "窗帘"
+            },
+            {
+              "entity": "sensor.hp_laserjet_mfp_m232_m237_black_cartridge_hp_w1370a",
+              "name": "墨盒状态"
+            }
+          ]
+        },
+        {
+          "type": "entities",
+          "title": "🌿 阳台",
+          "entities": [
+            {
+              "entity": "light.xi_ding_deng_kai_guan_kai_guan",
+              "name": "吸顶灯"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

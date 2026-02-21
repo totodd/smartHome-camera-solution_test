@@ -1,0 +1,57 @@
+services:
+
+  # 小米官方协议中间件
+  # 负责与小米云通信、解密视频流
+  # 必须 network_mode: host（Docker 网络隔离会导致连接失败）
+  miloco:
+    container_name: miloco
+    image: ghcr.nju.edu.cn/miiot/miloco:main
+    network_mode: host
+    environment:
+      BACKEND_PORT: 8001           # 避免与其他服务冲突
+      BACKEND_LOG_LEVEL: warning
+      TZ: ${TZ:-Asia/Shanghai}
+    volumes:
+      - /volume2/homeRecording_KID_FIX/micam/miloco:/app/miloco_server/.temp
+    restart: unless-stopped
+
+  # RTSP 流服务（独立实例，端口与 Frigate 内置 go2rtc 错开）
+  go2rtc:
+    container_name: go2rtc_xiaomi
+    image: ghcr.nju.edu.cn/alexxit/go2rtc
+    network_mode: host
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-Asia/Shanghai}
+    volumes:
+      - /volume2/homeRecording_KID_FIX/micam/go2rtc:/config
+
+  # 桥接服务：Miloco → go2rtc（客厅小米，DID: 1195161682）
+  micam:
+    container_name: micam
+    image: ghcr.nju.edu.cn/miiot/micam:main
+    depends_on: [miloco, go2rtc]
+    environment:
+      MILOCO_BASE_URL: https://192.168.2.61:8001
+      MILOCO_PASSWORD: <MILOCO_PASSWORD_MD5>   # MD5 of miloco password
+      CAMERA_ID: 1195161682                    # 客厅小米摄像头 DID
+      RTSP_URL: rtsp://192.168.2.61:8556/xiaomi_living_room
+      VIDEO_CODEC: hevc
+      STREAM_CHANNEL: 0
+      TZ: Asia/Shanghai
+    restart: always
+
+  # 桥接服务：Miloco → go2rtc（儿童房小米，DID: 1175497596）
+  micam_kid_room:
+    container_name: micam_kid_room
+    image: ghcr.nju.edu.cn/miiot/micam:main
+    depends_on: [miloco, go2rtc]
+    environment:
+      MILOCO_BASE_URL: https://192.168.2.61:8001
+      MILOCO_PASSWORD: <MILOCO_PASSWORD_MD5>   # MD5 of miloco password
+      CAMERA_ID: 1175497596                    # 儿童房小米摄像头 DID
+      RTSP_URL: rtsp://192.168.2.61:8556/xiaomi_kid_room
+      VIDEO_CODEC: hevc
+      STREAM_CHANNEL: 0
+      TZ: Asia/Shanghai
+    restart: always
