@@ -37,11 +37,12 @@ record:
       days: 60
 
 detectors:
-  # Intel OpenVINO — uses N5105 integrated GPU for inference
-  # Reduces detection CPU from ~54% avg to < 5%, inference ~5-10ms vs 59ms
+  # Intel OpenVINO — uses N5105 integrated GPU (iGPU) for inference
+  # Tested result: inference 13ms (vs 59ms CPU), detector CPU 0.6% (vs 85%)
+  # NOTE: device must be GPU, not AUTO — AUTO triggers AVX-512 which N5105 lacks
   ov:
     type: openvino
-    device: AUTO   # AUTO lets OpenVINO pick best available (iGPU on N5105)
+    device: GPU
 
 model:
   path: /openvino-model/ssdlite_mobilenet_v2.xml

@@ -10,8 +10,8 @@ services:
       - /dev/dri:/dev/dri  # Intel N5105 iGPU — required for OpenVINO + VAAPI
     volumes:
       # Replace with your actual NAS paths
-      - /volume1/homeRecording_KID_FIX/frigate-config:/config
-      - /volume1/homeRecording_KID_FIX/recordings:/media/frigate
+      - /volume2/homeRecording_KID_FIX/frigate-config:/config
+      - /volume2/homeRecording_KID_FIX/recordings:/media/frigate
       - /etc/localtime:/etc/localtime:ro
     ports:
       - "5000:5000"      # Frigate Web UI + REST API
