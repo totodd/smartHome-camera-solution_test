@@ -1,0 +1,47 @@
+mqtt:
+  enabled: false   # Enable if you use MQTT broker (e.g., Mosquitto)
+
+cameras:
+  kid_room:
+    ffmpeg:
+      inputs:
+        # High-res stream for recording (Channel 101 = main stream)
+        - path: rtsp://<USERNAME>:<PASSWORD>@<CAMERA_IP>:554/Streaming/Channels/101
+          roles:
+            - record
+        # Low-res stream for detection (Channel 102 = sub stream, saves CPU)
+        - path: rtsp://<USERNAME>:<PASSWORD>@<CAMERA_IP>:554/Streaming/Channels/102
+          roles:
+            - detect
+    detect:
+      enabled: true
+      width: 1280
+      height: 720
+      fps: 5
+
+record:
+  enabled: true
+  retain:
+    days: 60          # Keep continuous recordings for 60 days
+    mode: all         # Record all footage (not just events)
+  alerts:
+    retain:
+      days: 60
+  detections:
+    retain:
+      days: 60
+
+detectors:
+  # CPU detector — works on any hardware, no GPU/NPU required
+  # Replace with coral/openvino for much better performance
+  cpu1:
+    type: cpu
+
+objects:
+  track:
+    - person
+    - cat
+    - dog
+
+# Frigate version this config was tested on
+version: 0.16-0

@@ -1,0 +1,22 @@
+version: "3.9"
+
+services:
+  frigate:
+    container_name: frigate
+    image: ghcr.io/blakeblackshear/frigate:stable
+    restart: unless-stopped
+    shm_size: "128mb"
+    volumes:
+      # Replace with your actual NAS paths
+      - /volume1/homeRecording_KID_FIX/frigate-config:/config
+      - /volume1/homeRecording_KID_FIX/recordings:/media/frigate
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "5000:5000"      # Frigate Web UI + REST API
+      - "8554:8554"      # go2rtc RTSP restream
+      - "8555:8555/tcp"  # go2rtc WebRTC
+      - "8555:8555/udp"
+    environment:
+      - TZ=Asia/Shanghai
+    tmpfs:
+      - /tmp/cache:size=1g

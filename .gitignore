@@ -1,0 +1,13 @@
+# Secrets — never commit real credentials
+*.env
+.env*
+secrets.yaml
+auth-profiles.json
+
+# Frigate runtime database and cache
+frigate.db*
+backup.db
+model_cache/
+
+# macOS
+.DS_Store

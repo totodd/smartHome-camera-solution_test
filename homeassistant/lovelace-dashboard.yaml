@@ -1,0 +1,77 @@
+# Home Assistant Lovelace Dashboard
+# Single-page HomeKit-style layout, grouped by room
+#
+# How to apply:
+#   1. Go to HA Settings → Dashboards → Add Dashboard (or edit existing)
+#   2. Open the dashboard → top-right menu → Edit → Raw Configuration Editor
+#   3. Paste the content below (adjust entity IDs to match your devices)
+
+title: 智能家居
+views:
+  - title: 首页
+    path: home
+    type: masonry
+    cards:
+      # ── 玄关 ──────────────────────────────────────────
+      - type: entities
+        title: 🚪 玄关
+        entities:
+          - entity: light.entrance_light       # Replace with your entity ID
+          - entity: lock.front_door            # Replace with your entity ID
+
+      # ── 客厅 ──────────────────────────────────────────
+      - type: entities
+        title: 🛋️ 客厅
+        entities:
+          - entity: light.living_room_light
+          - entity: climate.living_room_ac
+          - entity: media_player.living_room_tv
+
+      # ── 厨房 ──────────────────────────────────────────
+      - type: entities
+        title: 🍳 厨房
+        entities:
+          - entity: light.kitchen_light
+          - entity: switch.kitchen_exhaust_fan
+
+      # ── 卧室 ──────────────────────────────────────────
+      - type: entities
+        title: 🛏️ 卧室
+        entities:
+          - entity: light.bedroom_light
+          - entity: climate.bedroom_ac
+
+      # ── 主卫 ──────────────────────────────────────────
+      - type: entities
+        title: 🚿 主卫
+        entities:
+          - entity: light.master_bathroom_light
+          - entity: fan.master_bathroom_exhaust
+
+      # ── 次卫 ──────────────────────────────────────────
+      - type: entities
+        title: 🪥 次卫
+        entities:
+          - entity: light.second_bathroom_light
+
+      # ── 书房 ──────────────────────────────────────────
+      - type: entities
+        title: 📚 书房
+        entities:
+          - entity: light.study_light
+
+      # ── 儿童房（含摄像头）──────────────────────────────
+      - type: picture-glance
+        title: 👶 儿童房
+        # Frigate snapshot URL — updates every time you open the card
+        camera_image: camera.frigate_kid_room   # entity created in step 4 of HA setup
+        entities:
+          - entity: light.kids_room_light
+          # Xiaomi camera motion detection (native camera feature, exposed via xiaomi_home)
+          - entity: switch.xiaomi_cam_motion_detection  # 看家助手
+
+      # ── 阳台 ──────────────────────────────────────────
+      - type: entities
+        title: 🌿 阳台
+        entities:
+          - entity: light.balcony_light
