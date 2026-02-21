@@ -5,7 +5,9 @@ services:
     container_name: frigate
     image: ghcr.io/blakeblackshear/frigate:stable
     restart: unless-stopped
-    shm_size: "128mb"
+    shm_size: "256mb"  # Increased for hardware decoding buffers
+    devices:
+      - /dev/dri:/dev/dri  # Intel N5105 iGPU — required for OpenVINO + VAAPI
     volumes:
       # Replace with your actual NAS paths
       - /volume1/homeRecording_KID_FIX/frigate-config:/config

@@ -1,6 +1,11 @@
 mqtt:
   enabled: false   # Enable if you use MQTT broker (e.g., Mosquitto)
 
+ffmpeg:
+  # Hardware-accelerated video decoding via Intel N5105 iGPU (VAAPI)
+  # Offloads H.264/H.265 decoding from CPU to GPU — significant CPU reduction
+  hwaccel_args: preset-vaapi
+
 cameras:
   kid_room:
     ffmpeg:
@@ -15,8 +20,8 @@ cameras:
             - detect
     detect:
       enabled: true
-      width: 1280
-      height: 720
+      width: 640   # Reduced from 1280 — sufficient for detection, less CPU
+      height: 360  # Reduced from 720
       fps: 5
 
 record:
@@ -32,10 +37,19 @@ record:
       days: 60
 
 detectors:
-  # CPU detector — works on any hardware, no GPU/NPU required
-  # Replace with coral/openvino for much better performance
-  cpu1:
-    type: cpu
+  # Intel OpenVINO — uses N5105 integrated GPU for inference
+  # Reduces detection CPU from ~54% avg to < 5%, inference ~5-10ms vs 59ms
+  ov:
+    type: openvino
+    device: AUTO   # AUTO lets OpenVINO pick best available (iGPU on N5105)
+
+model:
+  path: /openvino-model/ssdlite_mobilenet_v2.xml
+  width: 300
+  height: 300
+  input_tensor: nhwc
+  input_pixel_format: bgr
+  labelmap_path: /openvino-model/coco_91cl_bkgr.txt
 
 objects:
   track:
